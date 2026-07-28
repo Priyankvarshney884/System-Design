@@ -684,5 +684,4 @@ Sharding should address a measured scaling need because it permanently affects q
 ## Continue the Learning Path
 
 - **Previous:** Part 3 — Load Balancers in [`load-balancers.md`](./load-balancers.md)
-- **Next:** How consistent hashing reduces data movement when servers are added or removed
-
+- **Next:** Part 5 — Hashing Fundamentals in [`hashing-fundamentals.md`](./hashing-fundamentals.md)
