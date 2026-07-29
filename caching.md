@@ -4,6 +4,8 @@
 
 Caching is one of the most important performance patterns in system design. It stores frequently used data in a faster place so future requests can be served with lower latency and less work.
 
+For a focused backend cache design checklist, see [`cache-design.md`](./cache-design.md).
+
 At a high level:
 
 ```text
@@ -1249,4 +1251,3 @@ Avalanche   → Many keys expire together
 Penetration → Missing data repeatedly hits DB
 Hot key     → One key gets too much traffic
 ```
-
