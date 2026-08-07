@@ -8,7 +8,7 @@ That is where **DNS (Domain Name System)** comes in.
 
 > Think of DNS as the phonebook of the internet: it translates a memorable domain name into an IP address that a computer can use.
 
-![DNS overview and lookup hierarchy](./image.png)
+![DNS overview and lookup hierarchy](../assets/diagrams/dns-overview.png)
 
 ---
 

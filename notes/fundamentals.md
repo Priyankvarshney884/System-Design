@@ -806,6 +806,6 @@ Notifications, Analytics, Machine Learning
 **Remember:** System Design is a journey, not a destination. Every day you'll learn something new from real-world systems. Keep building, keep learning! 🚀
 
 ---
-![alt text](image.png)
+![DNS overview and lookup hierarchy](../assets/diagrams/dns-overview.png)
 
 *Last Updated: July 27, 2026*

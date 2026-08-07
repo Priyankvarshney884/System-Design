@@ -401,7 +401,7 @@ Events are append-only and processed asynchronously.
 
 ```text
 
-System-Design/handWrittenPdfs/facebookfeed.png
+![Facebook news feed handwritten frame](../assets/handwritten/facebook-news-feed/facebookfeed.png)
 ---
 
 ## Feed Publishing Flow

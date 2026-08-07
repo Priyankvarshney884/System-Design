@@ -18,8 +18,8 @@ Find the right data → Find the right shard → Find a healthy server
 
 ### ✍️ Handwritten Notes
 
-- [View the handwritten study sheet](./handWrittenPdfs/Data_Sharding_Routing_Handwritten_Notes.png)
-- [Download the printable PDF](./handWrittenPdfs/Data_Sharding_Routing_Handwritten_Notes.pdf)
+- [View the handwritten study sheet](../assets/handwritten/data-sharding-routing/Data_Sharding_Routing_Handwritten_Notes.png)
+- [Download the printable PDF](../assets/handwritten/data-sharding-routing/Data_Sharding_Routing_Handwritten_Notes.pdf)
 
 ---
 

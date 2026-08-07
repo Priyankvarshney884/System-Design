@@ -10,8 +10,8 @@ A **load balancer** solves this problem by acting as a traffic manager between c
 
 ### ✍️ Handwritten Notes
 
-- [View the handwritten study sheet](./handWrittenPdfs/Load_Balancers_Handwritten_Notes.png)
-- [Download the printable PDF](./handWrittenPdfs/Load_Balancers_Handwritten_Notes.pdf)
+- [View the handwritten study sheet](../assets/handwritten/load-balancers/Load_Balancers_Handwritten_Notes.png)
+- [Download the printable PDF](../assets/handwritten/load-balancers/Load_Balancers_Handwritten_Notes.pdf)
 
 ---
 

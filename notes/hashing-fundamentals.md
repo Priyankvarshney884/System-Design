@@ -32,8 +32,8 @@ A hash function maps an input of arbitrary size to a fixed-size value. The outpu
 
 ### ✍️ Handwritten Notes
 
-- [View the handwritten study sheet](./handWrittenPdfs/Hashing_Fundamentals_Handwritten_Notes.png)
-- [Download the printable PDF](./handWrittenPdfs/Hashing_Fundamentals_Handwritten_Notes.pdf)
+- [View the handwritten study sheet](../assets/handwritten/hashing-fundamentals/Hashing_Fundamentals_Handwritten_Notes.png)
+- [Download the printable PDF](../assets/handwritten/hashing-fundamentals/Hashing_Fundamentals_Handwritten_Notes.pdf)
 
 ---
 
@@ -676,4 +676,3 @@ Avoid inventing a custom hash function for production use.
 
 - **Previous:** Part 4 — Data Sharding & Routing in [`data-sharding-routing.md`](./data-sharding-routing.md)
 - **Next:** Consistent Hashing — minimizing data movement when servers join or leave
-

@@ -30,9 +30,9 @@ The goal is to reduce repeated expensive work while keeping correctness, freshne
 
 ## Handwritten Notes
 
-- [High-resolution cache design PNG](./handWrittenPdfs/cache_design_high_res.png)
-- [High-resolution cache design PDF](./handWrittenPdfs/cache_design_high_res.pdf)
-- [Original cache design PNG](./handWrittenPdfs/cache_design.png)
+- [High-resolution cache design PNG](../assets/handwritten/cache-design/cache_design_high_res.png)
+- [High-resolution cache design PDF](../assets/handwritten/cache-design/cache_design_high_res.pdf)
+- [Original cache design PDF](../assets/handwritten/cache-design/cache_design_notes.pdf)
 
 ---
 
@@ -652,4 +652,3 @@ These are the official docs I used for the key learning points:
 - **Related:** Part 6 broader guide in [`caching.md`](./caching.md)
 - **Previous:** Part 5 — Hashing Fundamentals in [`hashing-fundamentals.md`](./hashing-fundamentals.md)
 - **Next:** Consistent Hashing — minimizing cache and shard movement when servers join or leave
-

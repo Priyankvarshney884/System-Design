@@ -28,7 +28,7 @@ Caching improves user experience, reduces database and server load, saves cost, 
 
 ### ✍️ Handwritten Notes
 
-- [View the handwritten study sheet](./handWrittenPdfs/caching_handwritten.png)
+- [View the handwritten study sheet](../assets/handwritten/caching/caching_handwritten.png)
 
 ---
 
