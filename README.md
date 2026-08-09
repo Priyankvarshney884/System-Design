@@ -17,6 +17,7 @@ System-Design/
 - [DNS](notes/dns.md)
 - [Load Balancers](notes/load-balancers.md)
 - [Data Sharding & Routing](notes/data-sharding-routing.md)
+- [Databases for System Design Interviews](notes/databases-for-system-design-interviews.md)
 - [Cache Design](notes/cache-design.md)
 - [Caching](notes/caching.md)
 - [Hashing Fundamentals](notes/hashing-fundamentals.md)
