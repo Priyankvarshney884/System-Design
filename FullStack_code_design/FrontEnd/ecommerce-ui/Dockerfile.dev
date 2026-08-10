@@ -1,0 +1,23 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║   Angular Dev Server Dockerfile                              ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Used by docker-compose.yml for containerised local dev.
+# For production: use multi-stage build (see Dockerfile.prod)
+
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copy package files first (layer caching — npm install only re-runs if
+# package.json changes, not on every source file change)
+COPY package*.json ./
+RUN npm ci --silent
+
+# Copy rest of source
+COPY . .
+
+EXPOSE 4200
+
+# --host 0.0.0.0 — listen on all interfaces so Docker port mapping works
+# --poll 500     — file watching via polling (required inside Docker volumes)
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--poll", "500"]
