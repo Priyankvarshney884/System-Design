@@ -1,0 +1,221 @@
+version: "3.9"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║        Docker Compose — Local Development Infrastructure     ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Start everything:   docker compose up -d
+# Stop everything:    docker compose down
+# Reset volumes:      docker compose down -v
+#
+# Services & ports:
+#   Angular UI     → localhost:4200  (dev server with HMR)
+#   Spring Boot    → localhost:8080  (run via IDE or mvn, not in compose)
+#   PostgreSQL     → localhost:5432
+#   MongoDB        → localhost:27017
+#   Redis          → localhost:6379
+#   Kafka          → localhost:9092
+#   Kafka UI       → localhost:8090
+#   Elasticsearch  → localhost:9200
+#   Kibana         → localhost:5601
+
+services:
+
+  # ── Angular Frontend — Dev Server ───────────────────────────────
+  # Runs Angular CLI dev server with Hot Module Replacement (HMR).
+  # SYSTEM DESIGN: in production, replace with Nginx serving static dist/
+  # and configure Nginx to proxy /api → Spring Boot service.
+  #
+  # NOTE: The dev server is optional in Docker — you can also run it
+  # locally with `npm start` from FrontEnd/ecommerce-ui/ for faster HMR.
+  frontend:
+    build:
+      context: ./FrontEnd/ecommerce-ui
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      # Mount source so edits reflect instantly (HMR)
+      - ./FrontEnd/ecommerce-ui/src:/app/src
+      # Anonymous volume prevents host node_modules from overriding container's
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+    networks:
+      - ecommerce-network
+
+  # ── PostgreSQL — Primary Relational DB ──────────────────────────
+  # SYSTEM DESIGN: Stores transactional data (users, orders, payments)
+  # ACID guarantees essential for financial transactions
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce_user
+      POSTGRES_PASSWORD: ecommerce_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # ── MongoDB — Document Store ─────────────────────────────────────
+  # SYSTEM DESIGN: Product catalog — flexible schema per category
+  # Electronics, clothing, books all have different attributes
+  mongodb:
+    image: mongo:7
+    container_name: ecommerce-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: ecommerce_catalog
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # ── Redis — Cache + Sessions + Rate Limiting ─────────────────────
+  # SYSTEM DESIGN: Sub-millisecond reads, JWT token blacklist,
+  # distributed locks for inventory reservation, rate limiting counters
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    command: redis-server --appendonly yes  # AOF persistence — survive restarts
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # ── Zookeeper — Kafka Coordinator ───────────────────────────────
+  # Required by Kafka for leader election and cluster metadata
+  # Note: Kafka 3.x supports KRaft mode (no Zookeeper) but
+  # Zookeeper mode is still more common in enterprise setups
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: ecommerce-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - ecommerce-network
+
+  # ── Kafka — Event Streaming Platform ────────────────────────────
+  # SYSTEM DESIGN: Async event-driven communication between services
+  # Decouples order placement from inventory/payment/notification
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: ecommerce-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # PLAINTEXT_HOST allows external access from Spring Boot on host machine
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168   # 7 days — tune per topic in production
+    ports:
+      - "9092:9092"
+    networks:
+      - ecommerce-network
+
+  # ── Kafka UI — Visual Kafka Management ──────────────────────────
+  # Browse topics, consumer groups, messages in a browser
+  # URL: http://localhost:8090
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: ecommerce-kafka-ui
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    ports:
+      - "8090:8080"
+    networks:
+      - ecommerce-network
+
+  # ── Elasticsearch — Search Engine ───────────────────────────────
+  # SYSTEM DESIGN: Full-text search, faceted filters, autocomplete
+  # PostgreSQL LIKE queries don't scale — ES inverted index does
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: ecommerce-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false    # disable auth for local dev
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - ecommerce-network
+
+  # ── Kibana — Elasticsearch Dashboard ────────────────────────────
+  # Visualize ES data, search logs, build dashboards
+  # URL: http://localhost:5601
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: ecommerce-kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - ecommerce-network
+
+# ── Named Volumes ────────────────────────────────────────────────
+# Data persists across 'docker compose stop/start'
+# Use 'docker compose down -v' to wipe all data and start fresh
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  elasticsearch_data:
+  frontend_node_modules:
+
+# ── Networks ─────────────────────────────────────────────────────
+# Isolated bridge network — services talk to each other by service name
+# Spring Boot connects to 'localhost' ports exposed above
+networks:
+  ecommerce-network:
+    driver: bridge

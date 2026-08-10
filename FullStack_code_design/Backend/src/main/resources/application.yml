@@ -1,0 +1,136 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║       Application Properties — Local Development            ║
+# ╚══════════════════════════════════════════════════════════════╝
+# For production, override via environment variables or K8s secrets.
+# Never commit production credentials to source control.
+
+# ── Server ───────────────────────────────────────────────────────
+server:
+  port: 8080
+  # Graceful shutdown: finish in-flight requests before stopping
+  # SYSTEM DESIGN: prevents data loss during rolling deployments
+  shutdown: graceful
+
+spring:
+  application:
+    name: ecommerce-service
+
+  # ── Lifecycle ───────────────────────────────────────────────────
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  # ── PostgreSQL — Transactional Data ─────────────────────────────
+  # Users, orders, payments — anything needing ACID guarantees
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce
+    username: ecommerce_user
+    password: ecommerce_pass
+    driver-class-name: org.postgresql.Driver
+    # HikariCP — fastest JDBC connection pool
+    # SYSTEM DESIGN: pool size = (cores * 2) + effective_spindle_count
+    # For 4-core machine → pool-size = 9 is a good starting point
+    hikari:
+      pool-name: EcommerceHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000       # 5 min — close idle connections
+      connection-timeout: 20000  # 20s — fail fast if DB is down
+      leak-detection-threshold: 60000  # warn if connection held > 60s
+
+  jpa:
+    hibernate:
+      # SYSTEM DESIGN: NEVER use 'create-drop' or 'create' in production.
+      # Use 'validate' in prod — let Flyway/Liquibase manage schema.
+      # 'update' is acceptable for early development only.
+      ddl-auto: update
+    show-sql: false              # set true locally to debug queries
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Batch inserts: INSERT 50 rows in 1 round-trip instead of 50
+        # SYSTEM DESIGN: critical for bulk order-line-item inserts
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  # ── MongoDB — Product Catalog ────────────────────────────────────
+  # Flexible schema: products have different attributes per category
+  # (electronics vs clothing vs books have different fields)
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/ecommerce_catalog
+
+    # ── Redis — Cache + Sessions ─────────────────────────────────
+    redis:
+      host: localhost
+      port: 6379
+      # password: your_redis_password  # uncomment for prod
+      lettuce:
+        pool:
+          max-active: 8    # max connections
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms   # wait indefinitely for a connection
+
+  # ── Kafka — Event Streaming ──────────────────────────────────────
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ecommerce-service
+      auto-offset-reset: earliest   # dev: reprocess from beginning on new consumer group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.systemdesign.ecommerce.*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# ── JWT Configuration ─────────────────────────────────────────────
+# SYSTEM DESIGN: keep secret in vault/k8s secret — never hardcode in prod
+jwt:
+  secret: "ZWNvbW1lcmNlLXN5c3RlbS1kZXNpZ24tc2VjcmV0LWtleS0yMDI0"
+  access-token-expiry-ms: 900000       # 15 minutes — short-lived
+  refresh-token-expiry-ms: 604800000   # 7 days — long-lived, stored in Redis
+
+# ── Actuator — Observability ──────────────────────────────────────
+# SYSTEM DESIGN: health checks are critical for K8s liveness/readiness probes
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0    # 100% sampling in dev, reduce to 0.1 in prod
+
+# ── SpringDoc / Swagger ───────────────────────────────────────────
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+# ── Logging ───────────────────────────────────────────────────────
+# SYSTEM DESIGN: structured JSON logs in production for log aggregation
+# (ELK stack / Datadog / CloudWatch can parse JSON logs automatically)
+logging:
+  level:
+    com.systemdesign: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+  pattern:
+    # Include [traceId] in every log line for distributed tracing correlation
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId:-}] %-5level %logger{36} - %msg%n"
