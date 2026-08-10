@@ -1,6 +1,7 @@
 package com.systemdesign.ecommerce.common.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -18,51 +19,28 @@ import java.util.stream.Collectors;
 
 /**
  * ╔══════════════════════════════════════════════════════════════╗
- * ║         Global Exception Handler — Single Place for Errors   ║
+ * ║         Global Exception Handler                             ║
  * ╚══════════════════════════════════════════════════════════════╝
  *
- * DESIGN PATTERN: Chain of Responsibility (centralized variant)
- *   All exceptions bubble up here instead of being caught per-controller.
- *   Each @ExceptionHandler is a "link in the chain" for a specific type.
+ * DESIGN PATTERN: Chain of Responsibility (centralised variant)
+ *   All exceptions bubble up here — no try/catch in controllers.
  *
- * RESPONSE FORMAT: RFC 9457 Problem Details
- *   ProblemDetail is the standard Spring 6 error response format.
- *   Fields: type (URI), title, status, detail, instance.
- *   Consistent format allows API clients to handle errors generically.
- *
- * SYSTEM DESIGN: Why centralized error handling?
- *   - DRY: no duplicated try/catch in every controller
- *   - Consistent: all errors return the same structure
- *   - Observable: one place to log ALL errors with correlation IDs
- *   - Secure: prevents leaking stack traces to clients
- *
- * @RestControllerAdvice = @ControllerAdvice + @ResponseBody
+ * NOTE: Using explicit LoggerFactory instead of Lombok @Slf4j to ensure
+ * the logger works regardless of annotation processor configuration.
+ * This is infrastructure code that must never silently fail.
  */
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── Domain / Application Exceptions ─────────────────────────
+    // Explicit logger — no Lombok dependency
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /**
-     * Handles all typed AppException subclasses (404, 409, 400, 401, 403).
-     * The exception already carries the correct HttpStatus — map it directly.
-     */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ProblemDetail> handleAppException(AppException ex) {
         log.warn("Application exception: {} — {}", ex.getStatus(), ex.getMessage());
         return buildProblemDetail(ex.getStatus(), ex.getMessage());
     }
 
-    // ── Validation Exceptions ────────────────────────────────────
-
-    /**
-     * Triggered when a @Valid / @Validated annotated request body fails.
-     * Collects ALL field errors and returns them as a map.
-     *
-     * Example response:
-     * { "errors": { "email": "must be a valid email", "password": "size must be 8-20" } }
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidationException(
             MethodArgumentNotValidException ex) {
@@ -73,7 +51,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
-                        (a, b) -> a  // keep first error per field
+                        (a, b) -> a
                 ));
 
         log.warn("Validation failed: {}", errors);
@@ -85,37 +63,39 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problem);
     }
 
-    // ── Security Exceptions ──────────────────────────────────────
-
-    /** Spring Security throws this when JWT is missing or invalid */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ProblemDetail> handleAuthException(AuthenticationException ex) {
         log.warn("Authentication failed: {}", ex.getMessage());
         return buildProblemDetail(HttpStatus.UNAUTHORIZED, "Authentication required");
     }
 
-    /** Spring Security throws this when user lacks required role */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
         return buildProblemDetail(HttpStatus.FORBIDDEN, "Access denied");
     }
 
-    // ── Catch-All ────────────────────────────────────────────────
+    // Spring 6 / Security 6 throws AuthorizationDeniedException for .authenticated() failures
+    @ExceptionHandler(org.springframework.security.authorization.AuthorizationDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAuthorizationDenied(
+            org.springframework.security.authorization.AuthorizationDeniedException ex) {
+        log.warn("Authorization denied: {}", ex.getMessage());
+        return buildProblemDetail(HttpStatus.UNAUTHORIZED, "Authentication required");
+    }
 
-    /**
-     * Safety net — catch anything not handled above.
-     * IMPORTANT: never expose internal error details to clients in production.
-     * Log the full exception server-side, return a generic message to client.
-     */
+    // Null principal when @AuthenticationPrincipal resolves to null (no token sent)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex) {
-        log.error("Unhandled exception", ex);  // full stack trace in logs only
+        log.error("Unhandled exception: {}", ex.getMessage());
         return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred. Please try again later.");
     }
-
-    // ── Helper ───────────────────────────────────────────────────
 
     private ResponseEntity<ProblemDetail> buildProblemDetail(HttpStatus status, String detail) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);

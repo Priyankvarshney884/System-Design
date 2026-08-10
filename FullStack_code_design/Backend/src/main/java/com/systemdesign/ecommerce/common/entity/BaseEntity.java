@@ -1,8 +1,6 @@
 package com.systemdesign.ecommerce.common.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,22 +21,15 @@ import java.util.UUID;
  *   - UUID can be generated client-side before DB insert (no round-trip)
  *   - Safe to expose in URLs — no sequential enumeration attack
  *   - Works naturally with database sharding across nodes
- *   - Trade-off: 16 bytes vs 8 bytes, slightly larger indexes
  *
- * SYSTEM DESIGN: Why audit fields on every entity?
- *   At scale you always need to answer: "When was this created? Who changed it?"
- *   Adds createdAt / updatedAt automatically via Spring JPA Auditing.
+ * NOTE: Lombok removed — explicit getters to avoid annotation-processor
+ * dependency. BaseEntity is the foundation of every entity; it must
+ * compile cleanly without any annotation processor configuration.
  */
-@Getter
-@Setter
-@MappedSuperclass                        // Not a table itself — shared by all entities
-@EntityListeners(AuditingEntityListener.class)  // Triggers @CreatedDate / @LastModifiedDate
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
-    /**
-     * Primary key as UUID.
-     * GenerationType.UUID — Spring/Hibernate 6+ generates it before INSERT.
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
@@ -46,7 +37,7 @@ public abstract class BaseEntity {
 
     /**
      * Automatically set to NOW() on INSERT. Never updated after that.
-     * updatable=false ensures it stays immutable.
+     * SYSTEM DESIGN: every record needs a creation timestamp for audit trails.
      */
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -62,10 +53,22 @@ public abstract class BaseEntity {
 
     /**
      * Soft-delete flag.
-     * SYSTEM DESIGN: Never hard-delete records in production systems.
+     * SYSTEM DESIGN: Never hard-delete records in production.
      * Reasons: audit trail, event sourcing replay, accidental-delete recovery.
-     * All queries filter WHERE is_deleted = false by default.
+     * All queries should filter WHERE is_deleted = false by default.
      */
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
+
+    // ── Getters ──────────────────────────────────────────────────
+    public UUID          getId()        { return id;        }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public boolean       isDeleted()    { return deleted;   }
+
+    // ── Setters ──────────────────────────────────────────────────
+    public void setId(UUID id)                       { this.id = id;               }
+    public void setCreatedAt(LocalDateTime createdAt){ this.createdAt = createdAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt){ this.updatedAt = updatedAt; }
+    public void setDeleted(boolean deleted)          { this.deleted = deleted;     }
 }

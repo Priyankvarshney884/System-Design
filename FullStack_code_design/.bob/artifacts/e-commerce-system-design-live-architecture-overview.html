@@ -1,0 +1,459 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>E-Commerce System Design Overview</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.6; background: #ffffff; color: #1f2328; max-width: 860px; margin: 0 auto; padding: 32px 24px 48px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; }
+  h3 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: #1f2328; }
+  p  { color: #57606a; margin-bottom: 8px; font-size: 13px; }
+  .subtitle { color: #57606a; font-size: 13px; margin-bottom: 24px; }
+
+  /* Status bar */
+  .status-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; border: 1px solid; }
+  .badge-green  { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+  .badge-blue   { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+  .badge-purple { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* Architecture diagram */
+  .arch { background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8; white-space: pre; overflow-x: auto; }
+
+  /* Service cards */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; background: #f7f8fa; }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card-icon { font-size: 18px; }
+  .card-title { font-weight: 700; font-size: 13px; }
+  .card-port { font-size: 11px; color: #57606a; background: #e5e7eb; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
+  .card ul { list-style: none; padding: 0; }
+  .card li { font-size: 12px; color: #57606a; padding: 2px 0; padding-left: 12px; position: relative; }
+  .card li::before { content: "→"; position: absolute; left: 0; color: #9ca3af; font-size: 10px; top: 3px; }
+  .card-live { font-size: 11px; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 2px 6px; margin-top: 8px; display: inline-block; }
+
+  /* Data flow table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+  th { background: #f7f8fa; border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-weight: 700; color: #1f2328; }
+  td { border: 1px solid #e5e7eb; padding: 7px 10px; color: #57606a; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  td code, th code { font-family: 'Courier New', monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 11px; color: #1f2328; }
+
+  /* Code blocks */
+  pre { background: #1e1e2e; color: #cdd6f4; border-radius: 6px; padding: 14px 16px; font-size: 12px; overflow-x: auto; margin: 8px 0 14px; font-family: 'Courier New', monospace; line-height: 1.6; }
+  .cmd { color: #a6e3a1; }
+  .comment { color: #6c7086; }
+  .val { color: #fab387; }
+  .key { color: #89dceb; }
+
+  /* Pattern badges */
+  .pattern { display: inline-block; font-size: 11px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 4px; padding: 1px 7px; margin: 2px 2px 2px 0; font-weight: 600; }
+  .pattern-g { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+  .pattern-p { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
+
+  /* Section divider */
+  .section { margin-bottom: 28px; }
+
+  /* Live data highlight */
+  .live-data { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+  .live-data h4 { font-size: 12px; font-weight: 700; color: #166534; margin-bottom: 6px; }
+  .live-data pre { background: #ffffff; color: #1f2328; border: 1px solid #e5e7eb; margin: 0; font-size: 11px; }
+
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<h1>🏗️ E-Commerce System Design — Live Architecture</h1>
+<p class="subtitle">Java 21 + Spring Boot 3 · Angular 21 · All services verified running · Auth module complete</p>
+
+
+<div class="status-bar">
+  <span class="badge badge-green"><span class="dot"></span>Backend :8080 UP</span>
+  <span class="badge badge-green"><span class="dot"></span>PostgreSQL :5432 — 4 users</span>
+  <span class="badge badge-green"><span class="dot"></span>Redis :6379 — 3 refresh tokens</span>
+  <span class="badge badge-green"><span class="dot"></span>MongoDB :27017 OK</span>
+  <span class="badge badge-green"><span class="dot"></span>Elasticsearch :9200 green</span>
+  <span class="badge badge-green"><span class="dot"></span>Kafka :9092 — 6 topics</span>
+  <span class="badge badge-blue"><span class="dot"></span>Kafka UI :8090</span>
+  <span class="badge badge-blue"><span class="dot"></span>Kibana :5601</span>
+</div>
+
+
+<h2>🗺️ Architecture Diagram</h2>
+<div class="arch">
+  Angular 21 (localhost:4200)
+  │  NgRx Store · JWT Interceptor · Lazy Routes · Signals
+  │
+  ▼  HTTP/REST  (proxy → no CORS)
+┌──────────────────────────────────────────────────────────────────┐
+│              Spring Boot 3  (localhost:8080)                      │
+│                                                                    │
+│  JwtAuthFilter → SecurityConfig → Controller → Service → Repo     │
+│                                                                    │
+│  /api/v1/auth/**       AuthController  →  AuthService            │
+│  /api/v1/products/**   ProductController (next)                   │
+│  /api/v1/cart/**       CartController (next)                      │
+│  /api/v1/orders/**     OrderController (next)                     │
+│  /swagger-ui.html      SpringDoc OpenAPI                          │
+│  /actuator/health      Micrometer + Prometheus                    │
+└──────────┬──────────────┬──────────────┬────────────┬────────────┘
+           │              │              │            │
+           ▼              ▼              ▼            ▼
+    PostgreSQL:5432   Redis:6379    MongoDB:27017  Kafka:9092
+    user_domain.users token:refresh  (products)   order.placed
+    user_domain.      token:blacklist (catalog)   inventory.updated
+      user_roles      cache:products              notification.email
+    (orders, payments cache:categories            notification.sms
+     — coming next)   rate-limit:*               payment.processed
+                                       │
+                                       ▼
+                               Elasticsearch:9200
+                               (product search — next)
+</div>
+
+
+<h2>🐳 Infrastructure Services — What Each Does</h2>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🐘</span>
+      <span class="card-title">PostgreSQL 16</span>
+      <span class="card-port">:5432</span>
+    </div>
+    <ul>
+      <li>Transactional data — ACID guaranteed</li>
+      <li>Schema: <code>user_domain.users</code></li>
+      <li>Schema: <code>user_domain.user_roles</code></li>
+      <li>Future: <code>order_domain</code>, <code>payment_domain</code></li>
+      <li>HikariCP pool (min=5, max=10)</li>
+      <li>UUID primary keys, soft-delete, audit timestamps</li>
+    </ul>
+    <span class="card-live">✅ 4 users stored · 2 tables created</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">⚡</span>
+      <span class="card-title">Redis 7</span>
+      <span class="card-port">:6379</span>
+    </div>
+    <ul>
+      <li><code>token:refresh:{userId}</code> — TTL 7 days</li>
+      <li><code>token:blacklist:{jti}</code> — TTL = remaining token life</li>
+      <li><code>cache:products:*</code> — TTL 10 min (next)</li>
+      <li><code>cache:categories:*</code> — TTL 1 hour (next)</li>
+      <li>Rate limiting counters (next)</li>
+      <li>Distributed locks for inventory (next)</li>
+    </ul>
+    <span class="card-live">✅ 3 refresh tokens · AOF persistence on</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🍃</span>
+      <span class="card-title">MongoDB 7</span>
+      <span class="card-port">:27017</span>
+    </div>
+    <ul>
+      <li>Product catalog — flexible schema per category</li>
+      <li>Electronics: CPU, RAM, storage fields</li>
+      <li>Clothing: size, color, material fields</li>
+      <li>Books: author, ISBN, genre fields</li>
+      <li>No fixed schema — attributes vary per category</li>
+      <li>Collection: <code>ecommerce_catalog.products</code></li>
+    </ul>
+    <span class="card-live">✅ Connected · awaiting product module</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📨</span>
+      <span class="card-title">Apache Kafka</span>
+      <span class="card-port">:9092</span>
+    </div>
+    <ul>
+      <li><code>order.placed</code> — 3 partitions</li>
+      <li><code>order.cancelled</code> — 3 partitions</li>
+      <li><code>inventory.updated</code> — 3 partitions</li>
+      <li><code>payment.processed</code> — 3 partitions</li>
+      <li><code>notification.email</code> — 2 partitions</li>
+      <li><code>notification.sms</code> — 2 partitions</li>
+    </ul>
+    <span class="card-live">✅ 6 topics created · idempotent producer</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🔍</span>
+      <span class="card-title">Elasticsearch 8</span>
+      <span class="card-port">:9200</span>
+    </div>
+    <ul>
+      <li>Full-text product search with relevance scoring</li>
+      <li>Autocomplete / suggestions</li>
+      <li>Faceted filters (brand, price, rating)</li>
+      <li>Kibana dashboard at :5601</li>
+      <li>Index: <code>products</code> (next module)</li>
+    </ul>
+    <span class="card-live">✅ Cluster green · 1 node · awaiting indexing</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📊</span>
+      <span class="card-title">Monitoring UIs</span>
+      <span class="card-port">:8090 / :5601</span>
+    </div>
+    <ul>
+      <li>Kafka UI → <a href="http://localhost:8090">localhost:8090</a></li>
+      <li>Browse topics, consumer groups, messages</li>
+      <li>Kibana → <a href="http://localhost:5601">localhost:5601</a></li>
+      <li>Elasticsearch dashboards, log search</li>
+      <li>Swagger UI → <a href="http://localhost:8080/swagger-ui.html">localhost:8080/swagger-ui.html</a></li>
+      <li>Actuator → <a href="http://localhost:8080/actuator/health">localhost:8080/actuator/health</a></li>
+    </ul>
+    <span class="card-live">✅ All UIs accessible</span>
+  </div>
+
+</div>
+
+
+<h2>🔐 Auth Module — Complete Data Flow</h2>
+
+<div class="live-data">
+  <h4>📊 Live Data Verified in Each Service</h4>
+  <pre>PostgreSQL  →  4 users in user_domain.users + user_domain.user_roles
+Redis       →  3 active refresh tokens (token:refresh:{userId}) with 7-day TTL
+Kafka       →  6 topics ready (no events yet — triggered on order/payment actions)
+MongoDB     →  Connected, awaiting product catalog data
+Elasticsearch → green, awaiting product index</pre>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Action</th><th>Endpoint</th><th>What Happens in Each Service</th><th>Design Pattern</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Register</strong></td>
+      <td><code>POST /auth/register</code></td>
+      <td>
+        <strong>PostgreSQL:</strong> INSERT into users + user_roles<br />
+        <strong>Redis:</strong> SET token:refresh:{userId} = refreshToken, TTL=7d<br />
+        <strong>Response:</strong> accessToken (15min) + refreshToken (7d)
+      </td>
+      <td><span class="pattern">Facade</span><span class="pattern pattern-g">Strategy (BCrypt)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Login</strong></td>
+      <td><code>POST /auth/login</code></td>
+      <td>
+        <strong>PostgreSQL:</strong> SELECT user by email (idx_users_email)<br />
+        <strong>BCrypt:</strong> compare password hash (~100ms intentional)<br />
+        <strong>Redis:</strong> SET token:refresh:{userId}, overwrites old one<br />
+        <strong>Response:</strong> new accessToken + refreshToken
+      </td>
+      <td><span class="pattern">Repository</span><span class="pattern pattern-g">Strategy</span></td>
+    </tr>
+    <tr>
+      <td><strong>API Request</strong></td>
+      <td><code>GET /auth/me</code> (any protected route)</td>
+      <td>
+        <strong>JwtAuthFilter:</strong> extract Bearer token<br />
+        <strong>JWT verify:</strong> signature + expiry (in-memory, ~1ms)<br />
+        <strong>Redis:</strong> GET token:blacklist:{jti} — revocation check<br />
+        <strong>PostgreSQL:</strong> SELECT user WHERE active=true<br />
+        <strong>SecurityContext:</strong> set userId + roles
+      </td>
+      <td><span class="pattern">Chain of Responsibility</span></td>
+    </tr>
+    <tr>
+      <td><strong>Logout</strong></td>
+      <td><code>POST /auth/logout</code></td>
+      <td>
+        <strong>Redis:</strong> SET token:blacklist:{jti} = "revoked", TTL=remaining<br />
+        <strong>Redis:</strong> DEL token:refresh:{userId}<br />
+        <strong>Result:</strong> token rejected on next request
+      </td>
+      <td><span class="pattern pattern-p">Blacklist Pattern</span></td>
+    </tr>
+    <tr>
+      <td><strong>Token Refresh</strong></td>
+      <td><code>POST /auth/refresh</code></td>
+      <td>
+        <strong>JWT verify:</strong> signature + expiry + type=refresh<br />
+        <strong>Redis:</strong> GET token:refresh:{userId} → compare exact match<br />
+        <strong>PostgreSQL:</strong> reload current roles<br />
+        <strong>Response:</strong> new accessToken (15min)
+      </td>
+      <td><span class="pattern">Silent Refresh</span></td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h2>🔗 Frontend ↔ Backend Contract</h2>
+<table>
+  <thead>
+    <tr><th>Angular Component</th><th>Calls</th><th>NgRx Flow</th><th>Token Handling</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>LoginComponent</code></td>
+      <td><code>POST /auth/login</code></td>
+      <td>dispatch <code>loginRequest</code> → Effect → <code>loginSuccess</code> → Reducer stores user+token</td>
+      <td>accessToken → NgRx store; refreshToken → localStorage</td>
+    </tr>
+    <tr>
+      <td><code>authInterceptor</code></td>
+      <td>Every HTTP request</td>
+      <td>reads <code>selectAccessToken</code> from store → adds <code>Authorization: Bearer …</code></td>
+      <td>Runs before every outgoing request</td>
+    </tr>
+    <tr>
+      <td><code>errorInterceptor</code></td>
+      <td>Every HTTP response</td>
+      <td>catches 401 → dispatch <code>logout</code> → redirect to /auth/login</td>
+      <td>Prevents stale token loops</td>
+    </tr>
+    <tr>
+      <td><code>authGuard</code></td>
+      <td>Route activation</td>
+      <td>reads <code>selectIsLoggedIn</code> from store → allow or redirect</td>
+      <td>Protects /cart, /orders, /profile</td>
+    </tr>
+    <tr>
+      <td><code>roleGuard('ADMIN')</code></td>
+      <td>Route activation</td>
+      <td>reads <code>selectHasRole('ADMIN')</code> → allow or redirect to /403</td>
+      <td>Protects /admin routes</td>
+    </tr>
+    <tr>
+      <td>App bootstrap</td>
+      <td><code>GET /auth/me</code></td>
+      <td>dispatch <code>restoreSession</code> → Effect reads localStorage token → calls /auth/me → restores NgRx state</td>
+      <td>No re-login needed after page refresh</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h2>🧪 How to Verify Each Service is Working Correctly</h2>
+
+<h3>1. PostgreSQL — see your data</h3>
+<pre><span class="comment"># Connect to DB</span>
+<span class="cmd">docker exec -it ecommerce-postgres psql -U ecommerce_user -d ecommerce</span>
+
+<span class="comment"># List all users</span>
+<span class="cmd">SELECT id, name, email, is_active, created_at FROM user_domain.users;</span>
+
+<span class="comment"># See roles assigned to each user</span>
+<span class="cmd">SELECT u.email, ur.role FROM user_domain.users u JOIN user_domain.user_roles ur ON u.id = ur.user_id;</span>
+
+<span class="comment"># Check indexes created</span>
+<span class="cmd">\d user_domain.users</span></pre>
+
+<h3>2. Redis — inspect tokens live</h3>
+<pre><span class="comment"># Connect to Redis CLI</span>
+<span class="cmd">docker exec -it ecommerce-redis redis-cli</span>
+
+<span class="comment"># List all keys</span>
+<span class="cmd">KEYS *</span>
+
+<span class="comment"># See a refresh token value (copy a userId from PostgreSQL)</span>
+<span class="cmd">GET token:refresh:52e5ba53-18cb-42e8-b0e4-05860031180e</span>
+
+<span class="comment"># Check TTL (how long until it expires)</span>
+<span class="cmd">TTL token:refresh:52e5ba53-18cb-42e8-b0e4-05860031180e</span>
+
+<span class="comment"># After logout — see the blacklist entry appear</span>
+<span class="cmd">KEYS token:blacklist:*</span>
+<span class="cmd">TTL token:blacklist:&lt;jti-value&gt;</span></pre>
+
+<h3>3. Kafka — browse messages visually</h3>
+<pre><span class="comment"># Open Kafka UI in browser</span>
+<span class="val">http://localhost:8090</span>
+
+<span class="comment"># Or list topics from CLI</span>
+<span class="cmd">docker exec ecommerce-kafka kafka-topics --bootstrap-server localhost:9092 --list</span>
+
+<span class="comment"># Consume messages from a topic (once orders are placed)</span>
+<span class="cmd">docker exec ecommerce-kafka kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic order.placed --from-beginning</span></pre>
+
+<h3>4. Elasticsearch — check cluster health</h3>
+<pre><span class="comment"># Cluster health</span>
+<span class="cmd">curl http://localhost:9200/_cluster/health?pretty</span>
+
+<span class="comment"># List indexes (will show products index once product module is added)</span>
+<span class="cmd">curl http://localhost:9200/_cat/indices?v</span>
+
+<span class="comment"># Open Kibana for visual search</span>
+<span class="val">http://localhost:5601</span></pre>
+
+<h3>5. Backend API — test with curl or Swagger</h3>
+<pre><span class="comment"># Swagger UI (easiest — click &amp; test)</span>
+<span class="val">http://localhost:8080/swagger-ui.html</span>
+
+<span class="comment"># Health + metrics</span>
+<span class="cmd">curl http://localhost:8080/actuator/health</span>
+<span class="cmd">curl http://localhost:8080/actuator/metrics</span>
+<span class="cmd">curl http://localhost:8080/actuator/prometheus</span>   <span class="comment"># raw Prometheus metrics</span>
+
+<span class="comment"># Register → Login → Get Profile</span>
+<span class="cmd">TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"priyank@ecommerce.com","password":"Password123"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")</span>
+
+<span class="cmd">curl http://localhost:8080/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"</span></pre>
+
+
+<h2>🎯 Design Patterns — Where Each Lives in the Code</h2>
+<table>
+  <thead>
+    <tr><th>Pattern</th><th>File</th><th>How It's Used</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="pattern">Facade</span></td><td><code>AuthService.java</code></td><td>Single entry point orchestrating JWT + Redis + PostgreSQL + BCrypt</td></tr>
+    <tr><td><span class="pattern pattern-g">Chain of Responsibility</span></td><td><code>JwtAuthenticationFilter.java</code></td><td>Filter chain: extract → validate → blacklist check → set context</td></tr>
+    <tr><td><span class="pattern">Strategy</span></td><td><code>SecurityConfig.java</code></td><td>BCryptPasswordEncoder injected — swap to Argon2 with one bean change</td></tr>
+    <tr><td><span class="pattern pattern-p">Repository</span></td><td><code>UserRepository.java</code></td><td>Spring Data JPA abstracts all SQL — JOIN FETCH avoids N+1</td></tr>
+    <tr><td><span class="pattern">Template Method</span></td><td><code>BaseEntity.java</code></td><td>All entities inherit UUID PK, audit timestamps, soft-delete</td></tr>
+    <tr><td><span class="pattern pattern-g">Exception Hierarchy</span></td><td><code>AppException.java</code></td><td>Typed exceptions (404/409/401/403) → centralised handler</td></tr>
+    <tr><td><span class="pattern">Value Object</span></td><td><code>AuthDto.java</code></td><td>Java 21 Records — immutable DTOs with static factory methods</td></tr>
+    <tr><td><span class="pattern pattern-p">Redux / Command</span></td><td><code>auth.actions.ts</code> + <code>auth.effects.ts</code></td><td>Actions dispatch → Effects handle HTTP → Reducer updates state</td></tr>
+    <tr><td><span class="pattern">Decorator / Interceptor</span></td><td><code>auth.interceptor.ts</code></td><td>Adds Bearer token to every outgoing HTTP request transparently</td></tr>
+    <tr><td><span class="pattern pattern-g">Guard (C.o.R.)</span></td><td><code>auth.guard.ts</code>, <code>role.guard.ts</code></td><td>Route-level access control — chain of guards runs left-to-right</td></tr>
+  </tbody>
+</table>
+
+
+<h2>🚀 What's Next — Module Roadmap</h2>
+<table>
+  <thead>
+    <tr><th>Module</th><th>Backend Patterns</th><th>Services Used</th><th>Frontend</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>✅ <strong>Auth</strong></td><td>Facade, Strategy, Chain of Resp.</td><td>PostgreSQL + Redis</td><td>NgRx Auth, Interceptors, Guards</td></tr>
+    <tr><td>⬜ <strong>Product Catalog</strong></td><td>Repository, Cache-Aside, Builder</td><td>MongoDB + Redis + Elasticsearch</td><td>Product list/detail, OnPush, Virtual Scroll</td></tr>
+    <tr><td>⬜ <strong>Shopping Cart</strong></td><td>Command, Redis Store</td><td>Redis (cart as hash)</td><td>NgRx Cart, Optimistic UI</td></tr>
+    <tr><td>⬜ <strong>Order Service</strong></td><td>Saga, State Machine, Observer</td><td>PostgreSQL + Kafka</td><td>NgRx Orders, Real-time status</td></tr>
+    <tr><td>⬜ <strong>Payment</strong></td><td>Strategy, Idempotency, Factory</td><td>PostgreSQL + Kafka</td><td>Payment flow, loading states</td></tr>
+    <tr><td>⬜ <strong>Notifications</strong></td><td>Observer, Template, Kafka Consumer</td><td>Kafka + Email/SMS</td><td>Push notifications</td></tr>
+    <tr><td>⬜ <strong>Rate Limiting</strong></td><td>Token Bucket, Redis Lua script</td><td>Redis</td><td>429 error handling</td></tr>
+    <tr><td>⬜ <strong>Circuit Breaker</strong></td><td>Resilience4j, Fallback</td><td>All services</td><td>Retry + offline UI</td></tr>
+  </tbody>
+</table>
+
+<footer>Made with IBM Bob  ·  E-Commerce System Design Showcase  ·  Java 21 + Angular 21 + Spring Boot 3</footer>
+</body>
+</html>

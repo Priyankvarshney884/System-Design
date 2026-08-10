@@ -1,0 +1,474 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Development Roadmap — E-Commerce System Design POC</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6;background:#fff;color:#1f2328;max-width:900px;margin:0 auto;padding:32px 24px 60px}
+
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+h2{font-size:15px;font-weight:700;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;display:flex;align-items:center;gap:8px}
+h3{font-size:13px;font-weight:700;margin:14px 0 6px;color:#1f2328}
+p{color:#57606a;font-size:13px;margin-bottom:8px}
+.subtitle{color:#57606a;font-size:13px;margin-bottom:6px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;font-size:12px;color:#57606a}
+
+/* Progress summary */
+.progress-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+.prog-card{border:1px solid #e5e7eb;border-radius:8px;padding:12px 10px;text-align:center}
+.prog-num{font-size:24px;font-weight:700;color:#1f2328}
+.prog-lbl{font-size:11px;color:#57606a;margin-top:2px}
+.prog-done{border-color:#bbf7d0;background:#f0fdf4}.prog-done .prog-num{color:#166534}
+.prog-next{border-color:#bfdbfe;background:#eff6ff}.prog-next .prog-num{color:#1e40af}
+.prog-todo{background:#fafafa}
+
+/* Phase headers */
+.phase{border-left:3px solid #e5e7eb;margin-bottom:6px;padding-left:0}
+.phase-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f7f8fa;border-radius:6px;cursor:default}
+.phase-num{font-size:12px;font-weight:700;background:#1f2328;color:#fff;border-radius:4px;padding:2px 7px;min-width:28px;text-align:center}
+.phase-title{font-size:14px;font-weight:700;flex:1}
+.phase-tag{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.tag-done{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.tag-next{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.tag-todo{background:#f7f8fa;color:#57606a;border:1px solid #e5e7eb}
+.tag-infra{background:#faf5ff;color:#6b21a8;border:1px solid #e9d5ff}
+.phase-effort{font-size:11px;color:#57606a}
+
+/* Task list */
+.tasks{padding:8px 14px 12px 44px}
+.task-group{margin-bottom:10px}
+.task-group-label{font-size:11px;font-weight:700;color:#57606a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.task{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12.5px}
+.task-cb{width:14px;height:14px;border-radius:3px;border:1.5px solid #d1d5db;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center}
+.cb-done{background:#16a34a;border-color:#16a34a;color:#fff;font-size:9px}
+.cb-next{background:#fff;border-color:#3b82d4}
+.cb-todo{background:#fff;border-color:#d1d5db}
+.task-text{flex:1;color:#1f2328}
+.task-text.done{color:#57606a;text-decoration:line-through}
+.task-text.next{color:#1e40af;font-weight:600}
+.badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600}
+.b-pattern{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.b-service{background:#faf5ff;color:#6b21a8;border:1px solid #e9d5ff}
+.b-perf{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.b-security{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.b-frontend{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.b-deploy{background:#1f2328;color:#fff;border:1px solid #1f2328}
+
+/* Why it matters box */
+.why{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin:8px 0 4px;font-size:12px;color:#57606a}
+.why strong{color:#1f2328}
+
+/* Scale callout */
+.scale-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px}
+.scale-box strong{color:#92400e;display:block;margin-bottom:4px}
+
+/* Interview tip */
+.tip{background:#eff6ff;border-left:3px solid #3b82d4;padding:8px 12px;margin:8px 0;font-size:12px;color:#1e40af}
+
+/* Divider */
+hr{border:none;border-top:1px solid #e5e7eb;margin:20px 0}
+
+/* Table */
+table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12px}
+th{background:#f7f8fa;border:1px solid #e5e7eb;padding:7px 10px;text-align:left;font-weight:700}
+td{border:1px solid #e5e7eb;padding:6px 10px;color:#57606a;vertical-align:top}
+td code{font-family:monospace;background:#f0f0f0;padding:1px 4px;border-radius:3px;font-size:11px;color:#1f2328}
+tr:nth-child(even) td{background:#fafafa}
+
+footer{margin-top:48px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af}
+</style>
+</head>
+<body>
+
+<h1>🗺️ Complete Development Roadmap</h1>
+<p class="subtitle">E-Commerce System Design POC · Java 21 + Spring Boot 3 · Angular 21 · Full Stack</p>
+<div class="meta">
+  <span>📦 10 Modules</span>
+  <span>·</span>
+  <span>🎯 30+ Design Patterns</span>
+  <span>·</span>
+  <span>⚙️ 8 Infrastructure Services</span>
+  <span>·</span>
+  <span>🚀 POC Deployment Target: Railway / Render</span>
+</div>
+
+
+<div class="progress-grid">
+  <div class="prog-card prog-done"><div class="prog-num">1</div><div class="prog-lbl">Modules Done</div></div>
+  <div class="prog-card prog-next"><div class="prog-num">9</div><div class="prog-lbl">Modules Remaining</div></div>
+  <div class="prog-card prog-done"><div class="prog-num">10</div><div class="prog-lbl">Design Patterns Used</div></div>
+  <div class="prog-card"><div class="prog-num">8</div><div class="prog-lbl">Services Running</div></div>
+  <div class="prog-card prog-next"><div class="prog-num">POC</div><div class="prog-lbl">Deploy Target</div></div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">0</span>
+    <span class="phase-title">Foundation &amp; Infrastructure Setup</span>
+    <span class="phase-tag tag-done">✅ Complete</span>
+    <span class="phase-effort">~4 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Infrastructure</div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Docker Compose — PostgreSQL, MongoDB, Redis, Kafka, Elasticsearch, Kibana, Kafka UI</div><div class="badges"><span class="badge b-service">All 8 services</span><span class="badge b-perf">One-command startup</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Spring Boot 3.3 project with pom.xml — all dependencies declared</div><div class="badges"><span class="badge b-service">Java 21</span><span class="badge b-service">Spring Security</span><span class="badge b-service">JJWT 0.12</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Angular 21 project — Standalone, NgRx 21, Angular Material, ESLint</div><div class="badges"><span class="badge b-frontend">Signals</span><span class="badge b-frontend">OnPush CD</span><span class="badge b-frontend">Lazy Routes</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Base architecture — BaseEntity, ApiResponse, AppException hierarchy, GlobalExceptionHandler</div><div class="badges"><span class="badge b-pattern">Template Method</span><span class="badge b-pattern">Exception Hierarchy</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Redis config — Cache-Aside, per-cache TTLs, JSON serializer</div><div class="badges"><span class="badge b-pattern">Cache-Aside</span><span class="badge b-service">Redis</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">Kafka config — 6 topics, idempotent producer, partitioning strategy</div><div class="badges"><span class="badge b-pattern">Pub-Sub</span><span class="badge b-service">Kafka</span></div></div></div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">1</span>
+    <span class="phase-title">User Authentication &amp; Authorization</span>
+    <span class="phase-tag tag-done">✅ Complete — Tested E2E</span>
+    <span class="phase-effort">~6 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend</div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">User entity (UUID PK, soft-delete, BCrypt password, RBAC roles, manual builder)</div><div class="badges"><span class="badge b-pattern">Template Method</span><span class="badge b-service">PostgreSQL</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">UserRepository — JOIN FETCH roles (no N+1), findActiveByEmail, existsByEmail</div><div class="badges"><span class="badge b-pattern">Repository</span><span class="badge b-perf">Covering Index</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">JwtService — access (15min) + refresh (7d) tokens, jti UUID, claims extraction</div><div class="badges"><span class="badge b-security">JWT HS384</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">TokenBlacklistService — Redis blacklist on logout, refresh token store</div><div class="badges"><span class="badge b-service">Redis</span><span class="badge b-security">Token Revocation</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">AuthService facade — register, login, logout, refresh, getMe</div><div class="badges"><span class="badge b-pattern">Facade</span><span class="badge b-pattern">Strategy (BCrypt)</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">JwtAuthenticationFilter — blacklist check, SecurityContext population</div><div class="badges"><span class="badge b-pattern">Chain of Responsibility</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">SecurityConfig — stateless JWT, BCrypt(12), CORS, method security</div><div class="badges"><span class="badge b-security">RBAC</span><span class="badge b-security">Stateless</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">AuthController — 5 endpoints, Swagger annotations, 12/12 E2E tests passing</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Frontend (scaffolded)</div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">NgRx Auth store — actions, reducer, selectors, effects with silent refresh</div><div class="badges"><span class="badge b-pattern">Redux</span><span class="badge b-pattern">Command</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">authInterceptor + errorInterceptor — JWT attach, 401 handling</div><div class="badges"><span class="badge b-pattern">Decorator</span><span class="badge b-pattern">Chain of Resp.</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">authGuard + roleGuard + noAuthGuard — route-level RBAC</div><div class="badges"><span class="badge b-pattern">Guard Chain</span></div></div></div>
+      <div class="task"><div class="task-cb cb-done">✓</div><div><div class="task-text done">LoginComponent + RegisterComponent — Reactive Forms, Material UI</div><div class="badges"><span class="badge b-frontend">OnPush</span><span class="badge b-frontend">Signals</span></div></div></div>
+    </div>
+    <div class="why"><strong>Why this matters at scale:</strong> Stateless JWT = any server handles any request (no sticky sessions). Redis blacklist = instant token revocation without DB lookup on every request. BCrypt(12) = brute-force resistant even if DB is compromised.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">2</span>
+    <span class="phase-title">Product Catalog — MongoDB + Redis Cache + Elasticsearch</span>
+    <span class="phase-tag tag-next">⬜ Next</span>
+    <span class="phase-effort">~8 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend — Data Layer</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Product document (MongoDB) — flexible attributes map per category, @Document</div><div class="badges"><span class="badge b-service">MongoDB</span><span class="badge b-pattern">Document Model</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Category entity (PostgreSQL) — tree structure, parent/child, slug</div><div class="badges"><span class="badge b-service">PostgreSQL</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">ProductRepository (MongoRepository) — findByCategory, findByPriceRange</div><div class="badges"><span class="badge b-pattern">Repository</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text next">Cache-Aside with @Cacheable — product by ID, category list (Redis TTL 10min/1hr)</div><div class="badges"><span class="badge b-pattern">Cache-Aside</span><span class="badge b-service">Redis</span><span class="badge b-perf">10x faster reads</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">@CacheEvict on update/delete — keep cache consistent</div><div class="badges"><span class="badge b-pattern">Cache Invalidation</span></div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Backend — Search</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Elasticsearch product index — mapping for name, description, category, price, rating</div><div class="badges"><span class="badge b-service">Elasticsearch</span><span class="badge b-perf">Inverted Index</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Full-text search API — relevance scoring, multi-field boost</div><div class="badges"><span class="badge b-pattern">Facade</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Autocomplete endpoint — edge-ngram tokenizer, prefix queries</div><div class="badges"><span class="badge b-perf">Sub-100ms</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Faceted filters — brand, price range, rating, in-stock aggregations</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Backend — API + Patterns</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">ProductService — Builder pattern for complex product construction</div><div class="badges"><span class="badge b-pattern">Builder</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Cursor-based pagination (vs offset) — stable, fast at any depth</div><div class="badges"><span class="badge b-perf">No OFFSET scan</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">ProductController — GET /products, GET /products/:id, GET /products/search, GET /categories</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Seed script — 50+ sample products across 5 categories with MongoDB + ES sync</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Frontend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">ProductListComponent — NgRx product store, infinite scroll / pagination</div><div class="badges"><span class="badge b-frontend">Virtual Scroll</span><span class="badge b-pattern">Smart/Dumb Components</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">SearchBarComponent — debounced autocomplete (300ms), Angular Signals</div><div class="badges"><span class="badge b-frontend">Signals</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">ProductDetailComponent — image gallery, specs, add-to-cart button</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">FilterSidebarComponent — brand, price, rating filters → NgRx query params</div></div></div>
+    </div>
+    <div class="why"><strong>Why MongoDB here:</strong> Electronics have CPU/RAM/GPU. Clothing has size/color/fabric. Books have ISBN/author. PostgreSQL rigid columns can't handle this — MongoDB's flexible document model stores each category's unique attributes without nullable columns.</div>
+    <div class="scale-box"><strong>⚡ Scale impact:</strong> Without Redis cache → every product page = 1 MongoDB query (~5ms). With Cache-Aside → first request fills cache, next 1000 requests hit Redis (~0.5ms each). At 10,000 req/sec that's the difference between needing 50 MongoDB servers or 5.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">3</span>
+    <span class="phase-title">Shopping Cart — Redis Hash Store</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~5 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Cart stored as Redis Hash — key: cart:{userId}, field: productId, value: qty+price</div><div class="badges"><span class="badge b-service">Redis Hash</span><span class="badge b-perf">No DB needed</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">CartService — addItem, removeItem, updateQuantity, getCart, clearCart</div><div class="badges"><span class="badge b-pattern">Command Pattern</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Cart TTL = 30 days — guest cart merges with user cart on login</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Price recalculation on checkout — always read latest price from DB/cache</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Frontend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">CartComponent — NgRx cart store, quantity stepper, remove item</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Optimistic UI — update NgRx store immediately, sync to Redis async</div><div class="badges"><span class="badge b-frontend">Optimistic Update</span><span class="badge b-perf">Instant feedback</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Cart badge in header — selectCartCount selector, real-time count</div><div class="badges"><span class="badge b-frontend">Memoized Selector</span></div></div></div>
+    </div>
+    <div class="why"><strong>Why Redis for cart:</strong> Cart operations happen on almost every page interaction. PostgreSQL transactions for every add/remove would be overkill. Redis Hash operations are O(1) and sub-millisecond. Cart data is session-scoped — Redis TTL handles expiry automatically.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">4</span>
+    <span class="phase-title">Order Service — Saga Pattern + State Machine + Kafka</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~10 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend — Core Order Flow</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Order entity + OrderItem entity — PostgreSQL, order_domain schema</div><div class="badges"><span class="badge b-service">PostgreSQL</span><span class="badge b-pattern">Aggregate Root (DDD)</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text next">Order State Machine — PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED → CANCELLED</div><div class="badges"><span class="badge b-pattern">State Pattern</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Order validation pipeline — stock check, price verify, address validate</div><div class="badges"><span class="badge b-pattern">Chain of Responsibility</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">OrderService — placeOrder, cancelOrder, getOrderHistory</div><div class="badges"><span class="badge b-pattern">Facade</span></div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Backend — Saga Pattern (Distributed Transaction)</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">OrderPlacedEvent → Kafka → InventoryService (reserve stock)</div><div class="badges"><span class="badge b-pattern">Saga</span><span class="badge b-service">Kafka</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">StockReservedEvent → Kafka → PaymentService (charge card)</div><div class="badges"><span class="badge b-pattern">Choreography</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">PaymentSuccessEvent → Kafka → NotificationService (send email)</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Compensating transactions — if payment fails → release inventory → cancel order</div><div class="badges"><span class="badge b-pattern">Compensating Transaction</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Outbox Pattern — atomic DB write + event publish (no dual-write problem)</div><div class="badges"><span class="badge b-pattern">Outbox Pattern</span><span class="badge b-security">Exactly-once delivery</span></div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Frontend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">OrderListComponent — order history, status badges, pagination</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">OrderDetailComponent — timeline of state changes, cancel button</div><div class="badges"><span class="badge b-frontend">State-driven UI</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">CheckoutFlow — cart review → address → payment → confirmation</div></div></div>
+    </div>
+    <div class="why"><strong>Why Saga instead of 2PC (two-phase commit):</strong> 2PC locks DB rows across multiple services — a single slow service blocks everyone. Saga uses async Kafka events: each service does its work independently. If payment fails, a compensation event rolls back inventory. No distributed lock, no single point of failure.</div>
+    <div class="tip">💬 Interview answer: "We chose choreography-based Saga over orchestration because it keeps services fully decoupled — no central coordinator that becomes a bottleneck or single point of failure."</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">5</span>
+    <span class="phase-title">Inventory — Optimistic Locking + Distributed Lock</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~6 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Inventory entity — stock, reserved, available = stock - reserved</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text next">Optimistic Locking (@Version) — concurrent updates without DB lock</div><div class="badges"><span class="badge b-pattern">Optimistic Lock</span><span class="badge b-perf">No row lock contention</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Redis distributed lock (SETNX) — prevent overselling when 1000 users buy last item</div><div class="badges"><span class="badge b-pattern">Distributed Lock</span><span class="badge b-service">Redis</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Kafka consumer — listen InventoryReservationRequest, process, publish result</div><div class="badges"><span class="badge b-pattern">Event-Driven</span><span class="badge b-service">Kafka</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Dead Letter Queue (DLQ) — handle failed inventory messages, alert + retry</div><div class="badges"><span class="badge b-pattern">DLQ</span><span class="badge b-security">No silent failure</span></div></div></div>
+    </div>
+    <div class="scale-box"><strong>⚡ Scale impact (Black Friday scenario):</strong> 10,000 users simultaneously buying the last iPhone. Without distributed lock → 10,000 transactions succeed, stock goes negative. With Redis SETNX lock → only 1 transaction holds the lock, processes it, releases. Others get "Out of stock" gracefully.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">6</span>
+    <span class="phase-title">Payment Service — Strategy + Idempotency</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~6 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">PaymentGateway interface + Mock/Stripe/PayPal implementations</div><div class="badges"><span class="badge b-pattern">Strategy Pattern</span><span class="badge b-pattern">Factory Method</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text next">Idempotency key — Redis stores processedPayments:{idempotencyKey} to prevent double-charge</div><div class="badges"><span class="badge b-pattern">Idempotency</span><span class="badge b-service">Redis</span><span class="badge b-security">No double charge</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Payment entity — amount, currency, status, gateway reference, idempotency key</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Retry with exponential backoff — Resilience4j @Retry for transient failures</div><div class="badges"><span class="badge b-pattern">Retry + Backoff</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Refund flow — reverse transaction, update order status, trigger notification</div></div></div>
+    </div>
+    <div class="why"><strong>Why Idempotency is critical:</strong> Network timeouts happen. User clicks Pay → timeout → user clicks Pay again. Without idempotency key → charged twice. With it → second request detects key in Redis → returns cached success response → no second charge. Amazon, Stripe, Stripe all enforce this.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">7</span>
+    <span class="phase-title">Notification Service — Observer + Kafka Consumer</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~4 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Backend</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">NotificationSender interface + EmailSender/SmsSender/PushSender implementations</div><div class="badges"><span class="badge b-pattern">Abstract Factory</span><span class="badge b-pattern">Observer</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Kafka @KafkaListener — consume order.placed → send order confirmation email</div><div class="badges"><span class="badge b-service">Kafka</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Template engine — Thymeleaf email templates per event type</div><div class="badges"><span class="badge b-pattern">Template Method</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Retry + DLQ — failed emails retried 3x then moved to dead letter queue</div></div></div>
+    </div>
+    <div class="why"><strong>Why Kafka for notifications:</strong> If email service is down during order placement, without Kafka the entire order fails. With Kafka — order is placed successfully, email event sits in topic. When email service recovers, it processes all missed events. Zero messages lost.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">8</span>
+    <span class="phase-title">Scalability &amp; Performance Layer</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~8 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Rate Limiting</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text next">Token Bucket rate limiter — Redis Lua script, per-IP and per-user limits</div><div class="badges"><span class="badge b-pattern">Token Bucket</span><span class="badge b-service">Redis</span><span class="badge b-security">DDoS protection</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Rate limit filter — 429 Too Many Requests with Retry-After header</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Different limits — /auth/login: 5/min (brute force), /api: 100/min, /search: 30/sec</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Circuit Breaker &amp; Resilience</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Resilience4j @CircuitBreaker on external calls — payment gateway, email service</div><div class="badges"><span class="badge b-pattern">Circuit Breaker</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Fallback methods — return cached products if MongoDB is down</div><div class="badges"><span class="badge b-pattern">Fallback</span><span class="badge b-perf">Graceful degradation</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">@Bulkhead — isolate payment thread pool, don't let it starve other requests</div><div class="badges"><span class="badge b-pattern">Bulkhead</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">@Retry with exponential backoff — transient DB/network failures</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">CQRS — Separate Read/Write Models</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Command handlers — write to PostgreSQL (OrderCommand, ProductCommand)</div><div class="badges"><span class="badge b-pattern">CQRS</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Query handlers — read from Redis cache / Elasticsearch / MongoDB read replicas</div><div class="badges"><span class="badge b-perf">Read optimised</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Event Sourcing for orders — store every state change as immutable event</div><div class="badges"><span class="badge b-pattern">Event Sourcing</span></div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Database Optimisations</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Database indexing strategy — composite indexes, partial indexes, covering indexes</div><div class="badges"><span class="badge b-perf">Query speed</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Connection pool tuning — HikariCP metrics, monitor pool saturation</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Slow query logging — identify and fix N+1 and full-table scans</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Virtual Threads (Java 21) — enable for IO-bound request handling</div><div class="badges"><span class="badge b-perf">Project Loom</span><span class="badge b-service">Java 21</span></div></div></div>
+    </div>
+    <div class="scale-box"><strong>⚡ Circuit Breaker impact:</strong> Payment gateway goes down for 30 seconds. Without circuit breaker → all threads blocked waiting for timeout (30s × 1000 concurrent requests = server OOM). With circuit breaker → after 5 failures, opens circuit, returns fallback immediately. Other services unaffected.</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">9</span>
+    <span class="phase-title">Observability — Metrics + Tracing + Structured Logging</span>
+    <span class="phase-tag tag-todo">⬜ Planned</span>
+    <span class="phase-effort">~5 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Metrics &amp; Dashboards</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Custom Micrometer metrics — order count, payment success rate, cart abandonment</div><div class="badges"><span class="badge b-service">Micrometer</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Prometheus scraping Spring Boot actuator /actuator/prometheus</div><div class="badges"><span class="badge b-service">Prometheus</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Grafana dashboard — request rate, latency p50/p95/p99, error rate, cache hit ratio</div><div class="badges"><span class="badge b-service">Grafana</span></div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Distributed Tracing</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">OpenTelemetry — add traceId to every log line, span across service calls</div><div class="badges"><span class="badge b-service">OpenTelemetry</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Correlation ID propagated via Kafka headers and HTTP headers</div><div class="badges"><span class="badge b-pattern">Correlation ID</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Structured JSON logs — ELK stack or Kibana for log search</div><div class="badges"><span class="badge b-service">Kibana</span></div></div></div>
+    </div>
+    <div class="tip">💬 Interview answer: "We instrument every service with Micrometer. Our SLA is p99 latency under 200ms. Grafana alerts us when p99 exceeds 150ms (warning threshold) giving us time to scale before breach."</div>
+  </div>
+</div>
+
+
+
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-num">10</span>
+    <span class="phase-title">POC Deployment — Dockerize + Host</span>
+    <span class="phase-tag tag-infra">🚀 Deploy</span>
+    <span class="phase-effort">~6 hrs</span>
+  </div>
+  <div class="tasks">
+    <div class="task-group">
+      <div class="task-group-label">Containerization</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Spring Boot production Dockerfile — multi-stage, JRE-only final image (~180MB)</div><div class="badges"><span class="badge b-deploy">Docker</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Angular production Dockerfile — ng build → Nginx serve (already scaffolded)</div><div class="badges"><span class="badge b-deploy">Nginx</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">docker-compose.prod.yml — production overrides, secrets via environment</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Health checks on all containers — K8s liveness/readiness probes ready</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">Hosting Options (Free POC Tier)</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Option A: Railway.app — deploy Docker Compose directly, managed PostgreSQL + Redis</div><div class="badges"><span class="badge b-deploy">Railway</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Option B: Render.com — free tier web service + managed DB</div><div class="badges"><span class="badge b-deploy">Render</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Option C: AWS Free Tier — EC2 t2.micro + RDS + ElastiCache (most FAANG-relevant)</div><div class="badges"><span class="badge b-deploy">AWS</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Custom domain + HTTPS — SSL cert via Let's Encrypt / Cloudflare</div></div></div>
+    </div>
+    <div class="task-group">
+      <div class="task-group-label">CI/CD Pipeline</div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">GitHub Actions — on push: mvn test → docker build → deploy to Railway</div><div class="badges"><span class="badge b-deploy">GitHub Actions</span></div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Angular build pipeline — ng test → ng build --prod → deploy dist/ to CDN</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Smoke tests post-deploy — curl /actuator/health, /api/v1/auth/register</div></div></div>
+      <div class="task"><div class="task-cb cb-todo"></div><div><div class="task-text">Environment profiles — application-prod.yml, secrets via env vars (never in git)</div></div></div>
+    </div>
+    <div class="why"><strong>Why this matters for interviews:</strong> "Here's the live URL" is 10× more impactful than showing code. Interviewers can click through the app, see Swagger UI, ask "how would you scale this?" and you answer with live architecture running in front of them.</div>
+  </div>
+</div>
+
+<hr />
+
+
+<h2>📊 System Design Components — How They Make It Scalable</h2>
+<table>
+  <thead>
+    <tr><th>Component</th><th>Problem It Solves</th><th>Scale Impact</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>JWT + Redis Blacklist</strong></td><td>Stateless auth — no session DB lookup per request</td><td>Any server handles any request; instant revocation</td><td>✅ Done</td></tr>
+    <tr><td><strong>Redis Cache-Aside</strong></td><td>DB overload on product catalog reads</td><td>10,000 req/sec with 5 DB servers instead of 50</td><td>⬜ Phase 2</td></tr>
+    <tr><td><strong>Kafka Event Streaming</strong></td><td>Synchronous calls create cascading failures</td><td>Order service decoupled from all downstream services</td><td>⬜ Phase 4</td></tr>
+    <tr><td><strong>Elasticsearch</strong></td><td>PostgreSQL LIKE search = full table scan</td><td>Sub-100ms search on 10M products with inverted index</td><td>⬜ Phase 2</td></tr>
+    <tr><td><strong>MongoDB</strong></td><td>Rigid SQL schema for flexible product attributes</td><td>Add new product categories without schema migration</td><td>⬜ Phase 2</td></tr>
+    <tr><td><strong>Saga + Outbox</strong></td><td>Distributed transactions without 2PC locking</td><td>No cross-service DB locks; compensations handle failures</td><td>⬜ Phase 4</td></tr>
+    <tr><td><strong>Optimistic Locking</strong></td><td>Concurrent inventory updates cause overselling</td><td>No DB row locks; conflict detected at commit time</td><td>⬜ Phase 5</td></tr>
+    <tr><td><strong>Redis Distributed Lock</strong></td><td>Flash-sale last item bought 1000× simultaneously</td><td>Only 1 transaction succeeds; others get clean error</td><td>⬜ Phase 5</td></tr>
+    <tr><td><strong>Circuit Breaker</strong></td><td>Slow payment gateway blocks all threads</td><td>Fail fast, return fallback; other services unaffected</td><td>⬜ Phase 8</td></tr>
+    <tr><td><strong>Rate Limiting</strong></td><td>DDoS / credential stuffing attacks</td><td>5 login attempts/min per IP; API abuse prevention</td><td>⬜ Phase 8</td></tr>
+    <tr><td><strong>CQRS</strong></td><td>Read and write have different performance profiles</td><td>Reads from cache/replica; writes to primary DB</td><td>⬜ Phase 8</td></tr>
+    <tr><td><strong>Virtual Threads (Java 21)</strong></td><td>Thread-per-request model limits concurrency</td><td>Handle 1M concurrent connections on same hardware</td><td>⬜ Phase 8</td></tr>
+    <tr><td><strong>Lazy Loading (Angular)</strong></td><td>Entire SPA downloaded on first load</td><td>Initial bundle 43KB instead of 2MB; 3× faster FCP</td><td>✅ Done</td></tr>
+    <tr><td><strong>OnPush CD (Angular)</strong></td><td>Change detection checks every component on every event</td><td>2-5× fewer CD cycles; smooth 60fps UI</td><td>✅ Done</td></tr>
+    <tr><td><strong>Nginx + CDN</strong></td><td>Static files served by app server (wasted compute)</td><td>Static assets cached at edge; 10ms vs 200ms globally</td><td>⬜ Phase 10</td></tr>
+  </tbody>
+</table>
+
+<footer>Made with IBM Bob  ·  E-Commerce System Design POC  ·  Java 21 + Angular 21 + Spring Boot 3</footer>
+</body>
+</html>

@@ -1,0 +1,17 @@
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/EcommerceApplication.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/common/entity/BaseEntity.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/common/exception/AppException.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/common/exception/GlobalExceptionHandler.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/common/response/ApiResponse.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/config/KafkaConfig.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/config/OpenApiConfig.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/config/RedisConfig.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/config/SecurityConfig.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/controller/AuthController.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/dto/AuthDto.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/entity/User.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/repository/UserRepository.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/security/JwtAuthenticationFilter.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/service/AuthService.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/service/JwtService.java
+/Users/priyankvarshney/Desktop/HLD Diagram/System-Design/FullStack_code_design/Backend/src/main/java/com/systemdesign/ecommerce/module/auth/service/TokenBlacklistService.java

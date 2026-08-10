@@ -1,8 +1,6 @@
 package com.systemdesign.ecommerce.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Getter;
 
 import java.time.Instant;
 
@@ -12,105 +10,81 @@ import java.time.Instant;
  * ╚══════════════════════════════════════════════════════════════╝
  *
  * DESIGN PATTERN: Builder + Value Object
- *   Immutable response wrapper built via Lombok @Builder.
+ *   Immutable response wrapper built via manual static builder.
+ *   Java records used for nested types (immutable by nature).
  *   All API endpoints return this type for consistency.
  *
- * SYSTEM DESIGN: Why a standard response envelope?
- *   - API clients (Angular) can always expect the same shape
- *   - Easy to add cross-cutting fields (requestId, version) later
- *   - Pagination metadata slots in naturally
+ * NOTE: We use a manual static inner Builder here instead of Lombok @Builder
+ * because this is a generic class <T> — Lombok @Builder has edge cases with
+ * generic static factory methods that cause "cannot find symbol builder()" at
+ * compile time when annotation processing order is not guaranteed.
  *
- * @JsonInclude(NON_NULL) — null fields are omitted from JSON output,
- * keeping responses clean (e.g. no "message": null on success responses).
- *
- * Usage:
- *   return ApiResponse.success(userDto);
- *   return ApiResponse.success("User created", userDto);
- *   return ApiResponse.error("Email already exists");
+ * @JsonInclude(NON_NULL) — null fields are omitted from JSON output.
  *
  * @param <T> the type of the payload data
  */
-@Getter
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
+public final class ApiResponse<T> {
 
-    /** true = request succeeded, false = request failed */
-    private final boolean success;
-
-    /** Human-readable message (optional on success, required on error) */
-    private final String message;
-
-    /** The actual response payload — null on error responses */
-    private final T data;
-
-    /**
-     * Pagination metadata — populated by list endpoints.
-     * Null for single-resource endpoints.
-     */
+    private final boolean  success;
+    private final String   message;
+    private final T        data;
     private final PageMeta page;
+    private final Instant  timestamp;
 
-    /** Server-side timestamp — helps correlate client logs with server logs */
-    private final Instant timestamp;
+    private ApiResponse(boolean success, String message, T data, PageMeta page) {
+        this.success   = success;
+        this.message   = message;
+        this.data      = data;
+        this.page      = page;
+        this.timestamp = Instant.now();
+    }
 
-    // ── Factory Methods ─────────────────────────────────────────
+    // ── Getters (no Lombok — avoids annotation-processor ordering issues) ──
+    public boolean  isSuccess()   { return success;   }
+    public String   getMessage()  { return message;   }
+    public T        getData()     { return data;      }
+    public PageMeta getPage()     { return page;      }
+    public Instant  getTimestamp(){ return timestamp; }
+
+    // ── Factory Methods ──────────────────────────────────────────
 
     /** Success with data only */
     public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .data(data)
-                .timestamp(Instant.now())
-                .build();
+        return new ApiResponse<>(true, null, data, null);
     }
 
     /** Success with custom message + data */
     public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message(message)
-                .data(data)
-                .timestamp(Instant.now())
-                .build();
+        return new ApiResponse<>(true, message, data, null);
     }
 
     /** Success with message only (e.g. delete, logout) */
     public static ApiResponse<Void> success(String message) {
-        return ApiResponse.<Void>builder()
-                .success(true)
-                .message(message)
-                .timestamp(Instant.now())
-                .build();
+        return new ApiResponse<>(true, message, null, null);
     }
 
     /** Paginated list response */
     public static <T> ApiResponse<T> page(T data, PageMeta pageMeta) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .data(data)
-                .page(pageMeta)
-                .timestamp(Instant.now())
-                .build();
+        return new ApiResponse<>(true, null, data, pageMeta);
     }
 
     // ── Nested: Pagination Metadata ──────────────────────────────
 
     /**
      * SYSTEM DESIGN: Cursor-based vs Offset pagination
-     *   - Offset (page/size): simple but slow on large tables (OFFSET 10000 scans 10000 rows)
-     *   - Cursor-based: fast regardless of depth, but requires a stable sort key
-     *   We provide both here; cursor is preferred for high-traffic list APIs.
+     *   - Offset (page/size): simple but slow on large tables
+     *   - Cursor-based: fast regardless of depth, requires stable sort key
+     * Java record: immutable, compact, auto-generates equals/hashCode/toString.
      */
-    @Getter
-    @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class PageMeta {
-        private final int pageNumber;
-        private final int pageSize;
-        private final long totalElements;
-        private final int totalPages;
-        private final boolean last;
-        private final String nextCursor;   // for cursor-based pagination
-        private final String prevCursor;   // for cursor-based pagination
-    }
+    public record PageMeta(
+        int    pageNumber,
+        int    pageSize,
+        long   totalElements,
+        int    totalPages,
+        boolean last,
+        String nextCursor,
+        String prevCursor
+    ) {}
 }
